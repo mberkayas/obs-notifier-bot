@@ -1,0 +1,15 @@
+# Sanal ortam
+venv/
+env/
+.env
+
+# Gizli veriler ve loglar
+.env
+grades.json
+state.json
+captcha_screenshot.png
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
