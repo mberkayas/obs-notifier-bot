@@ -1,0 +1,43 @@
+name: OBS Notifier Bot
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Her 5 dakikada bir tetiklenir
+  workflow_dispatch: # İstenirse GitHub üzerinden manuel butonla da çalıştırılabilir
+
+jobs:
+  check-grades:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # grades.json dosyasını repoya geri kaydedebilmek için
+      
+    steps:
+      - name: Kodu Klonla
+        uses: actions/checkout@v4
+      
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          
+      - name: Gereksinimleri Yükle
+        run: pip install -r requirements.txt
+        
+      - name: Playwright Tarayıcılarını Kur
+        run: playwright install chromium --with-deps
+        
+      - name: Botu Çalıştır (2'li Kontrol)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+        run: python bot.py --github
+        
+      - name: Yeni Notları Kaydet (grades.json)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f grades.json # .gitignore kuralını yok sayıp zorla ekler
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Notlar güncellendi [Otomatik]" && git push)

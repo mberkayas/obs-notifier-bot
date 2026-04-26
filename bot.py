@@ -192,14 +192,27 @@ def run_check(saved_grades: dict):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--loop", action="store_true")
+    parser.add_argument("--github", action="store_true", help="GitHub Actions modu (5 dk içinde 2 kez kontrol)")
     args = parser.parse_args()
 
     if not all([TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, OBS_USERNAME, OBS_PASSWORD]):
-        print("❌ .env dosyasinda eksik degerler!"); exit(1)
+        print("❌ .env veya çevre değişkenlerinde eksik bilgiler var!"); exit(1)
 
     saved = load_saved_grades()
     try:
-        if args.loop:
+        if args.github:
+            log("🚀 GitHub Actions modu: 5 dakikalık görev içinde 2 kez kontrol yapılacak.")
+            log("=" * 50)
+            saved, success = run_check(saved)
+            
+            log("⏳ 2.5 dakika (150 saniye) bekleniyor (2. kontrol için)...")
+            time.sleep(150)
+            
+            log("=" * 50)
+            saved, success = run_check(saved)
+            log("🏁 GitHub Actions görevi tamamlandı.")
+            
+        elif args.loop:
             log(f"🔄 Dongu modu: Her {CHECK_INTERVAL//60} dakikada bir kontrol.")
             while True:
                 log("=" * 50)
